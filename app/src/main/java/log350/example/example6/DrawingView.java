@@ -184,7 +184,8 @@ public class DrawingView extends View {
 	int indexOfShapeBeingManipulated = -1;
 
 	MyButton lassoButton = new MyButton( "Lasso", 10, 70, 140, 140 );
-	
+	MyButton deleteButton = new MyButton( "Supprimer", 10, 220, 140, 140 );
+
 	OnTouchListener touchListener;
 	
 	public DrawingView(Context context) {
@@ -255,6 +256,7 @@ public class DrawingView extends View {
 		gw.setCoordinateSystemToPixels();
 
 		lassoButton.draw( gw, currentMode == MODE_LASSO );
+		deleteButton.draw(gw, false);
 
 		if ( currentMode == MODE_LASSO ) {
 			MyCursor lassoCursor = cursorContainer.getCursorByType( MyCursor.TYPE_DRAGGING, 0 );

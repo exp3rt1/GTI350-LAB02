@@ -191,6 +191,7 @@ public class DrawingView extends View {
     static final int MODE_LASSO = 3; // the user is drawing a lasso to select shapes
     static final int MODE_DELETE = 4;
     static final int MODE_FIT = 5;
+    static final int MODE_CREATE = 6;
     int currentMode = MODE_NEUTRAL;
 
     // This is only used when currentMode==MODE_SHAPE_MANIPULATION, otherwise it is equal to -1
@@ -199,6 +200,7 @@ public class DrawingView extends View {
     MyButton lassoButton = new MyButton("Lasso", 10, 70, 140, 140);
     MyButton deleteButton = new MyButton("Supprimer", 10, 220, 140, 140);
     MyButton fitButton = new MyButton("Encadrer", 10, 370, 140, 140);
+    MyButton createButton = new MyButton("Créer", 10, 520, 140, 140);
 
     OnTouchListener touchListener;
 
@@ -272,6 +274,7 @@ public class DrawingView extends View {
         lassoButton.draw(gw, currentMode == MODE_LASSO);
         deleteButton.draw(gw, currentMode == MODE_DELETE);
         fitButton.draw(gw, currentMode == MODE_FIT);
+        createButton.draw(gw, currentMode == MODE_CREATE);
 
         if (currentMode == MODE_LASSO) {
             MyCursor lassoCursor = cursorContainer.getCursorByType(MyCursor.TYPE_DRAGGING, 0);
@@ -287,6 +290,10 @@ public class DrawingView extends View {
 
         if (currentMode == MODE_FIT) {
             gw.frame(shapeContainer.getBoundingRectangle(), true);
+        }
+
+        if (currentMode == MODE_CREATE) {
+            System.out.println("CREATE MODE");
         }
 
         if (cursorContainer.getNumCursors() > 0) {
@@ -377,6 +384,8 @@ public class DrawingView extends View {
                                     currentMode = MODE_DELETE;
                                 } else if(fitButton.contains(p_pixels)){
                                     currentMode = MODE_FIT;
+                                } else if(createButton.contains(p_pixels)){
+                                    currentMode = MODE_CREATE;
                                 } else if (indexOfShapeBeingManipulated >= 0) {
                                     currentMode = MODE_SHAPE_MANIPULATION;
                                     cursor.setType(MyCursor.TYPE_DRAGGING);

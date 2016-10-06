@@ -190,6 +190,7 @@ public class DrawingView extends View {
     static final int MODE_SHAPE_MANIPULATION = 2; // the user is translating/rotating/scaling a shape
     static final int MODE_LASSO = 3; // the user is drawing a lasso to select shapes
     static final int MODE_DELETE = 4;
+    static final int MODE_FIT = 5;
     int currentMode = MODE_NEUTRAL;
 
     // This is only used when currentMode==MODE_SHAPE_MANIPULATION, otherwise it is equal to -1
@@ -197,6 +198,7 @@ public class DrawingView extends View {
 
     MyButton lassoButton = new MyButton("Lasso", 10, 70, 140, 140);
     MyButton deleteButton = new MyButton("Supprimer", 10, 220, 140, 140);
+    MyButton fitButton = new MyButton("Encadrer", 10, 370, 140, 140);
 
     OnTouchListener touchListener;
 
@@ -269,6 +271,7 @@ public class DrawingView extends View {
 
         lassoButton.draw(gw, currentMode == MODE_LASSO);
         deleteButton.draw(gw, currentMode == MODE_DELETE);
+        fitButton.draw(gw, currentMode == MODE_FIT);
 
         if (currentMode == MODE_LASSO) {
             MyCursor lassoCursor = cursorContainer.getCursorByType(MyCursor.TYPE_DRAGGING, 0);
@@ -282,13 +285,16 @@ public class DrawingView extends View {
             System.out.println("Me gusta en las fresas");
         }
 
+        if (currentMode == MODE_FIT) {
+            gw.frame(shapeContainer.getBoundingRectangle(), true);
+        }
+
         if (cursorContainer.getNumCursors() > 0) {
             gw.setFontHeight(30);
             gw.setLineWidth(2);
             gw.setColor(1.0f, 1.0f, 1.0f);
             gw.drawString(50, 50, "[" + cursorContainer.getNumCursors() + " contacts]");
         }
-
     }
 
     /**
@@ -369,6 +375,8 @@ public class DrawingView extends View {
                                     cursor.setType(MyCursor.TYPE_BUTTON);
                                 } else if(deleteButton.contains(p_pixels)) {
                                     currentMode = MODE_DELETE;
+                                } else if(fitButton.contains(p_pixels)){
+                                    currentMode = MODE_FIT;
                                 } else if (indexOfShapeBeingManipulated >= 0) {
                                     currentMode = MODE_SHAPE_MANIPULATION;
                                     cursor.setType(MyCursor.TYPE_DRAGGING);
@@ -448,6 +456,10 @@ public class DrawingView extends View {
                                 }
                             }
                             break;
+                        case MODE_FIT:
+                            if (type == MotionEvent.ACTION_UP) {
+                                currentMode = MODE_NEUTRAL;
+                            }
                     }
 
                     v.invalidate();

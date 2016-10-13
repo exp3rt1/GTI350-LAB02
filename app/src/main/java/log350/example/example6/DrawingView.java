@@ -285,7 +285,10 @@ public class DrawingView extends View {
         }
 
         if (currentMode == MODE_DELETE) {
-            System.out.println("Me gusta en las fresas");
+            for(int i = 0; i < selectedShapes.size(); i++) {
+                selectedShapes.remove(i);
+            }
+            System.out.println(selectedShapes.toString());
         }
 
         if (currentMode == MODE_FIT) {
@@ -465,6 +468,17 @@ public class DrawingView extends View {
                                 }
                             }
                             break;
+                        case MODE_DELETE:
+                            if (type == MotionEvent.ACTION_DOWN) {
+                                if (cursorContainer.getNumCursorsOfGivenType(MyCursor.TYPE_DRAGGING) == 1)
+                                    // there's already a finger dragging out the lasso
+                                    cursor.setType(MyCursor.TYPE_IGNORE);
+                                else
+                                    cursor.setType(MyCursor.TYPE_DRAGGING);
+                            }
+                            if (type == MotionEvent.ACTION_UP) {
+                                currentMode = MODE_DELETE;
+                            }
                         case MODE_FIT:
                             if (type == MotionEvent.ACTION_UP) {
                                 currentMode = MODE_NEUTRAL;

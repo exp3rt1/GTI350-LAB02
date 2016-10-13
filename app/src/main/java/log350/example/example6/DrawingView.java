@@ -1,6 +1,7 @@
 
 package log350.example.example6;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 //import java.util.List;
 
@@ -282,11 +283,20 @@ public class DrawingView extends View {
                 gw.setColor(1.0f, 0.0f, 0.0f, 0.5f);
                 gw.fillPolygon(lassoCursor.getPositions());
             }
+
         }
 
         if (currentMode == MODE_DELETE) {
-            for(int i = 0; i < selectedShapes.size(); i++) {
-                selectedShapes.remove(i);
+            ArrayList<Shape> shapesToDelete = new ArrayList<Shape>();
+
+            for (Shape shape : shapeContainer.shapes) {
+                if(selectedShapes.contains(shape)) {
+                    selectedShapes.remove(shape);
+                    shapesToDelete.add(shape);
+                }
+            }
+            for(Shape shape : shapesToDelete) {
+                shapeContainer.shapes.remove(shape);
             }
             System.out.println(selectedShapes.toString());
         }
@@ -469,16 +479,12 @@ public class DrawingView extends View {
                             }
                             break;
                         case MODE_DELETE:
-                            if (type == MotionEvent.ACTION_DOWN) {
-                                if (cursorContainer.getNumCursorsOfGivenType(MyCursor.TYPE_DRAGGING) == 1)
-                                    // there's already a finger dragging out the lasso
-                                    cursor.setType(MyCursor.TYPE_IGNORE);
-                                else
-                                    cursor.setType(MyCursor.TYPE_DRAGGING);
-                            }
+                            cursorContainer.removeCursorByIndex(cursorIndex);
                             if (type == MotionEvent.ACTION_UP) {
-                                currentMode = MODE_DELETE;
+                                currentMode = MODE_NEUTRAL;
                             }
+                            break;
+
                         case MODE_FIT:
                             cursorContainer.removeCursorByIndex(cursorIndex);
                             if (type == MotionEvent.ACTION_UP) {
@@ -509,12 +515,7 @@ public class DrawingView extends View {
                                 }
                             }
                             break;
-                        case MODE_DELETE:
-                            cursorContainer.removeCursorByIndex(cursorIndex);
-                            if (type == MotionEvent.ACTION_UP) {
-                                currentMode = MODE_NEUTRAL;
-                            }
-                            break;
+
                     }
 
                     v.invalidate();

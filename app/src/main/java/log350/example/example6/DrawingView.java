@@ -1,6 +1,7 @@
 
 package log350.example.example6;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 //import java.util.List;
 
@@ -285,10 +286,11 @@ public class DrawingView extends View {
                 gw.setColor(1.0f, 0.0f, 0.0f, 0.5f);
                 gw.fillPolygon(lassoCursor.getPositions());
             }
+
         }
 
         if (currentMode == MODE_DELETE) {
-            System.out.println("Me gusta en las fresas");
+            
         }
 
         if (currentMode == MODE_FIT) {
@@ -482,6 +484,25 @@ public class DrawingView extends View {
                                 }
                             }
                             break;
+                        case MODE_DELETE:
+                            if (type == MotionEvent.ACTION_UP) {
+                                Point2D p_pixels = new Point2D(x, y);
+                                Point2D p_world = gw.convertPixelsToWorldSpaceUnits(p_pixels);
+                                indexOfShapeBeingManipulated = shapeContainer.indexOfShapeContainingGivenPoint(p_world);
+                                if(indexOfShapeBeingManipulated >= 0) {
+                                    Shape shape = shapeContainer.getShape(indexOfShapeBeingManipulated);
+                                    if(selectedShapes.contains(shape)) {
+                                        selectedShapes.remove(shape);
+                                    }
+                                    shapeContainer.shapes.remove(shape);
+                                }
+                                cursorContainer.removeCursorByIndex(cursorIndex);
+                                if (cursorContainer.getNumCursors() == 0) {
+                                    currentMode = MODE_NEUTRAL;
+                                }
+                            }
+                            break;
+
                         case MODE_FIT:
                             if (type == MotionEvent.ACTION_UP) {
                                 cursorContainer.removeCursorByIndex(cursorIndex);
@@ -524,12 +545,6 @@ public class DrawingView extends View {
                                 }
                             }
                             break;
-                            case MODE_DELETE:
-                                if (type == MotionEvent.ACTION_UP) {
-                                    cursorContainer.removeCursorByIndex(cursorIndex);
-                                    currentMode = MODE_NEUTRAL;
-                                }
-                                break;
                     }
 
                     v.invalidate();

@@ -183,7 +183,10 @@ public class DrawingView extends View {
 
     ShapeContainer shapeContainer = new ShapeContainer();
     ArrayList<Shape> selectedShapes = new ArrayList<Shape>();
+    ArrayList<Point2D> positionTouch = new ArrayList<Point2D>();
     CursorContainer cursorContainer = new CursorContainer();
+
+    boolean isCreated = false;
 
     static final int MODE_NEUTRAL = 0; // the default mode
     static final int MODE_CAMERA_MANIPULATION = 1; // the user is panning/zooming the camera
@@ -293,7 +296,21 @@ public class DrawingView extends View {
         }
 
         if (currentMode == MODE_CREATE) {
-            System.out.println("CREATE MODE");
+            //System.out.println("CREATE MODE");
+            if (isCreated && positionTouch.size() > 0) {
+                ArrayList<Point2D> sommets = new ArrayList<Point2D>();
+                sommets = Point2DUtil.computeConvexHull(positionTouch);
+                shapeContainer.addShape(sommets);
+                positionTouch.clear();
+                isCreated = false;
+            }
+
+            if (positionTouch.size() > 2) {
+                ArrayList<Point2D> points = new ArrayList<Point2D>();
+                points = Point2DUtil.computeConvexHull(positionTouch);
+                Shape s = new Shape(points);
+                s.draw(gw, true);
+            }
         }
 
         if (cursorContainer.getNumCursors() > 0) {
@@ -466,41 +483,53 @@ public class DrawingView extends View {
                             }
                             break;
                         case MODE_FIT:
-                            cursorContainer.removeCursorByIndex(cursorIndex);
                             if (type == MotionEvent.ACTION_UP) {
-                                currentMode = MODE_NEUTRAL;
-                            }
-                            break;
-                        case MODE_CREATE:
-                            if (type == MotionEvent.ACTION_DOWN) {
-                                if (cursorContainer.getNumCursors() > 2) {
-                                    ArrayList<Point2D> positions = new ArrayList<Point2D>();
-                                    System.out.print(cursorContainer.getNumCursors());
-                                    /*for (int i = 0; i < cursorContainer.getNumCursors(); i++) {
-                                        positions.add(cursorContainer.getCursorByIndex(i).getCurrentPosition());
-                                    }
-                                    ArrayList<Point2D> points = Point2DUtil.computeConvexHull(positions);
-
-                                    gw.setColor(1.0f, 0.0f, 0.0f, 0.8f);
-                                    gw.fillPolygon(points);
-
-                                    // draw all the shapes
-                                    shapeContainer.draw(gw, indexOfShapeBeingManipulated);*/
-                                }
-                            }
-                            else if (type == MotionEvent.ACTION_UP) {
                                 cursorContainer.removeCursorByIndex(cursorIndex);
                                 if (cursorContainer.getNumCursors() == 0) {
                                     currentMode = MODE_NEUTRAL;
                                 }
                             }
                             break;
-                        case MODE_DELETE:
-                            cursorContainer.removeCursorByIndex(cursorIndex);
-                            if (type == MotionEvent.ACTION_UP) {
-                                currentMode = MODE_NEUTRAL;
+                        case MODE_CREATE:
+                            if (type == MotionEvent.ACTION_DOWN) {
+                                if (!createButton.contains(cursorContainer.getCursorByIndex(cursorIndex).getCurrentPosition())) {
+                                    positionTouch.add(cursorContainer.getCursorByIndex(cursorIndex).getCurrentPosition());
+                                }
+                            }
+                            else if (type == MotionEvent.ACTION_UP) {
+                                /*if (!createButton.contains(cursorContainer.getCursorByIndex(cursorIndex).getCurrentPosition())) {
+                                    if (positionTouch.size() < cursorContainer.getNumCursors())
+                                        positionTouch.remove(cursorIndex - 1);
+                                    else
+                                        positionTouch.remove(cursorIndex);
+                                }*/
+                                isCreated = true;
+
+                                cursorContainer.removeCursorByIndex(cursorIndex);
+                                if (cursorContainer.getNumCursors() == 0) {
+                                    currentMode = MODE_NEUTRAL;
+                                }
+                            }
+                            else if (type == MotionEvent.ACTION_MOVE) {
+                                for (int i = 0; i < event.getPointerCount(); ++i) {
+                                    int tmp_id = event.getPointerId(i);
+                                    cursorContainer.updateCursorById(tmp_id, event.getX(i), event.getY(i));
+                                }
+
+                                positionTouch.clear();
+                                for (int i=0; i < cursorContainer.getNumCursors(); i++) {
+                                    if (!createButton.contains(cursorContainer.getCursorByIndex(i).getCurrentPosition())) {
+                                        positionTouch.add(cursorContainer.getCursorByIndex(i).getCurrentPosition());
+                                    }
+                                }
                             }
                             break;
+                            case MODE_DELETE:
+                                if (type == MotionEvent.ACTION_UP) {
+                                    cursorContainer.removeCursorByIndex(cursorIndex);
+                                    currentMode = MODE_NEUTRAL;
+                                }
+                                break;
                     }
 
                     v.invalidate();

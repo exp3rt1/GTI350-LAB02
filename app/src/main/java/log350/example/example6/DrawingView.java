@@ -287,18 +287,7 @@ public class DrawingView extends View {
         }
 
         if (currentMode == MODE_DELETE) {
-            ArrayList<Shape> shapesToDelete = new ArrayList<Shape>();
-
-            for (Shape shape : shapeContainer.shapes) {
-                if(selectedShapes.contains(shape)) {
-                    selectedShapes.remove(shape);
-                    shapesToDelete.add(shape);
-                }
-            }
-            for(Shape shape : shapesToDelete) {
-                shapeContainer.shapes.remove(shape);
-            }
-            System.out.println(selectedShapes.toString());
+            
         }
 
         if (currentMode == MODE_FIT) {
@@ -481,6 +470,16 @@ public class DrawingView extends View {
                         case MODE_DELETE:
                             cursorContainer.removeCursorByIndex(cursorIndex);
                             if (type == MotionEvent.ACTION_UP) {
+                                Point2D p_pixels = new Point2D(x, y);
+                                Point2D p_world = gw.convertPixelsToWorldSpaceUnits(p_pixels);
+                                indexOfShapeBeingManipulated = shapeContainer.indexOfShapeContainingGivenPoint(p_world);
+                                if(indexOfShapeBeingManipulated >= 0) {
+                                    Shape shape = shapeContainer.getShape(indexOfShapeBeingManipulated);
+                                    if(selectedShapes.contains(shape)) {
+                                        selectedShapes.remove(shape);
+                                    }
+                                    shapeContainer.shapes.remove(shape);
+                                }
                                 currentMode = MODE_NEUTRAL;
                             }
                             break;

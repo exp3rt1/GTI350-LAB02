@@ -480,9 +480,41 @@ public class DrawingView extends View {
                                 currentMode = MODE_DELETE;
                             }
                         case MODE_FIT:
+                            cursorContainer.removeCursorByIndex(cursorIndex);
                             if (type == MotionEvent.ACTION_UP) {
                                 currentMode = MODE_NEUTRAL;
                             }
+                            break;
+                        case MODE_CREATE:
+                            if (type == MotionEvent.ACTION_DOWN) {
+                                if (cursorContainer.getNumCursors() > 2) {
+                                    ArrayList<Point2D> positions = new ArrayList<Point2D>();
+                                    System.out.print(cursorContainer.getNumCursors());
+                                    /*for (int i = 0; i < cursorContainer.getNumCursors(); i++) {
+                                        positions.add(cursorContainer.getCursorByIndex(i).getCurrentPosition());
+                                    }
+                                    ArrayList<Point2D> points = Point2DUtil.computeConvexHull(positions);
+
+                                    gw.setColor(1.0f, 0.0f, 0.0f, 0.8f);
+                                    gw.fillPolygon(points);
+
+                                    // draw all the shapes
+                                    shapeContainer.draw(gw, indexOfShapeBeingManipulated);*/
+                                }
+                            }
+                            else if (type == MotionEvent.ACTION_UP) {
+                                cursorContainer.removeCursorByIndex(cursorIndex);
+                                if (cursorContainer.getNumCursors() == 0) {
+                                    currentMode = MODE_NEUTRAL;
+                                }
+                            }
+                            break;
+                        case MODE_DELETE:
+                            cursorContainer.removeCursorByIndex(cursorIndex);
+                            if (type == MotionEvent.ACTION_UP) {
+                                currentMode = MODE_NEUTRAL;
+                            }
+                            break;
                     }
 
                     v.invalidate();

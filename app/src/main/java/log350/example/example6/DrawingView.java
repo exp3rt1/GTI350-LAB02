@@ -188,6 +188,7 @@ public class DrawingView extends View {
     CursorContainer cursorContainer = new CursorContainer();
 
     boolean isCreated = false;
+    boolean canCreate = false;
 
     static final int MODE_NEUTRAL = 0; // the default mode
     static final int MODE_CAMERA_MANIPULATION = 1; // the user is panning/zooming the camera
@@ -299,12 +300,14 @@ public class DrawingView extends View {
 
         if (currentMode == MODE_CREATE) {
             //System.out.println("CREATE MODE");
-            if (isCreated && positionTouch.size() > 0) {
+            if (canCreate && positionTouch.size() > 0) {
                 ArrayList<Point2D> sommets = new ArrayList<Point2D>();
+                System.out.println("Longueur:" + positionTouch.size());
                 sommets = Point2DUtil.computeConvexHull(positionTouch);
                 shapeContainer.addShape(sommets);
+                isCreated = true;
+                canCreate = false;
                 positionTouch.clear();
-                isCreated = false;
             }
 
             if (positionTouch.size() > 2) {
@@ -515,6 +518,7 @@ public class DrawingView extends View {
                             if (type == MotionEvent.ACTION_DOWN) {
                                 if (!createButton.contains(cursorContainer.getCursorByIndex(cursorIndex).getCurrentPosition())) {
                                     positionTouch.add(cursorContainer.getCursorByIndex(cursorIndex).getCurrentPosition());
+                                    System.out.println(positionTouch.size());
                                 }
                             }
                             else if (type == MotionEvent.ACTION_UP) {
@@ -524,11 +528,17 @@ public class DrawingView extends View {
                                     else
                                         positionTouch.remove(cursorIndex);
                                 }*/
-                                isCreated = true;
+
+                                if (positionTouch.size() > 2) {
+                                    canCreate = true;
+                                    System.out.println("oui");
+                                }
 
                                 cursorContainer.removeCursorByIndex(cursorIndex);
                                 if (cursorContainer.getNumCursors() == 0) {
                                     currentMode = MODE_NEUTRAL;
+                                    isCreated = false;
+                                    positionTouch.clear();
                                 }
                             }
                             else if (type == MotionEvent.ACTION_MOVE) {
@@ -537,12 +547,13 @@ public class DrawingView extends View {
                                     cursorContainer.updateCursorById(tmp_id, event.getX(i), event.getY(i));
                                 }
 
-                                positionTouch.clear();
-                                for (int i=0; i < cursorContainer.getNumCursors(); i++) {
-                                    if (!createButton.contains(cursorContainer.getCursorByIndex(i).getCurrentPosition())) {
-                                        positionTouch.add(cursorContainer.getCursorByIndex(i).getCurrentPosition());
+                                    System.out.println("test:" + event.getPointerId(0));
+                                    positionTouch.clear();
+                                    for (int i = 0; i < cursorContainer.getNumCursors(); i++) {
+                                        if (!createButton.contains(cursorContainer.getCursorByIndex(i).getCurrentPosition())) {
+                                            positionTouch.add(cursorContainer.getCursorByIndex(i).getCurrentPosition());
+                                        }
                                     }
-                                }
                             }
                             break;
                     }

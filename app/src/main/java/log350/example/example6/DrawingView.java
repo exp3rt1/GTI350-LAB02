@@ -205,7 +205,7 @@ public class DrawingView extends View {
     MyButton lassoButton = new MyButton("Lasso", 10, 70, 140, 140);
     MyButton deleteButton = new MyButton("Supprimer", 10, 220, 140, 140);
     MyButton fitButton = new MyButton("Encadrer", 10, 370, 140, 140);
-    MyButton createButton = new MyButton("Créer", 10, 520, 140, 140);
+    MyButton createButton = new MyButton("Créer", 10, 520, 170, 170);
 
     OnTouchListener touchListener;
 
@@ -299,10 +299,8 @@ public class DrawingView extends View {
         }
 
         if (currentMode == MODE_CREATE) {
-            //System.out.println("CREATE MODE");
             if (canCreate && positionTouch.size() > 0) {
                 ArrayList<Point2D> sommets = new ArrayList<Point2D>();
-                System.out.println("Longueur:" + positionTouch.size());
                 sommets = Point2DUtil.computeConvexHull(positionTouch);
                 shapeContainer.addShape(sommets);
                 isCreated = true;
@@ -516,20 +514,24 @@ public class DrawingView extends View {
                             break;
                         case MODE_CREATE:
                             if (type == MotionEvent.ACTION_DOWN) {
-                                if (!createButton.contains(cursorContainer.getCursorByIndex(cursorIndex).getCurrentPosition())) {
-                                    positionTouch.add(cursorContainer.getCursorByIndex(cursorIndex).getCurrentPosition());
+                                if (!createButton.contains(cursorContainer.getCursorByIndex(event.getActionIndex()).getCurrentPosition())) {
+                                    positionTouch.add(cursorContainer.getCursorByIndex(event.getActionIndex()).getCurrentPosition());
                                     System.out.println(positionTouch.size());
                                 }
                             }
                             else if (type == MotionEvent.ACTION_UP) {
-                                /*if (!createButton.contains(cursorContainer.getCursorByIndex(cursorIndex).getCurrentPosition())) {
-                                    if (positionTouch.size() < cursorContainer.getNumCursors())
-                                        positionTouch.remove(cursorIndex - 1);
-                                    else
-                                        positionTouch.remove(cursorIndex);
-                                }*/
-
-                                if (positionTouch.size() > 2) {
+                                if (positionTouch.size() <= 2) {
+                                    if (!isCreated) {
+                                        if (!createButton.contains(cursorContainer.getCursorByIndex(event.getActionIndex()).getCurrentPosition())) {
+                                            System.out.println("touch:" + event.getActionIndex());
+                                            if (positionTouch.size() <= cursorContainer.getNumCursors() - 1)
+                                                positionTouch.remove(event.getActionIndex() - 1);
+                                            else
+                                                positionTouch.remove(event.getActionIndex());
+                                        }
+                                    }
+                                }
+                                else {
                                     canCreate = true;
                                     System.out.println("oui");
                                 }
@@ -547,13 +549,16 @@ public class DrawingView extends View {
                                     cursorContainer.updateCursorById(tmp_id, event.getX(i), event.getY(i));
                                 }
 
-                                    System.out.println("test:" + event.getPointerId(0));
-                                    positionTouch.clear();
+                                if (positionTouch.size() > 0) {
                                     for (int i = 0; i < cursorContainer.getNumCursors(); i++) {
                                         if (!createButton.contains(cursorContainer.getCursorByIndex(i).getCurrentPosition())) {
-                                            positionTouch.add(cursorContainer.getCursorByIndex(i).getCurrentPosition());
+                                            if (positionTouch.size() <= cursorContainer.getNumCursors() - 1)
+                                                positionTouch.get(i - 1).copy(cursorContainer.getCursorByIndex(i).getCurrentPosition());
+                                            else
+                                                positionTouch.get(i).copy(cursorContainer.getCursorByIndex(i).getCurrentPosition());
                                         }
                                     }
+                                }
                             }
                             break;
                     }

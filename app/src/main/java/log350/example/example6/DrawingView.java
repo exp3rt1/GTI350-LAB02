@@ -314,9 +314,7 @@ public class DrawingView extends View {
                 for (Point2D p: positionTouch) {
                     pos.add(gw.convertPixelsToWorldSpaceUnits(p));
                 }
-                System.out.println(pos.size());
-                ArrayList<Point2D> sommets = Point2DUtil.computeConvexHull(pos);
-                shapeContainer.addShape(sommets);
+                shapeContainer.addShape(Point2DUtil.computeConvexHull(pos));
                 isCreated = true;
                 canCreate = false;
                 positionTouch.clear();
@@ -534,7 +532,6 @@ public class DrawingView extends View {
                             }
                             else if (type == MotionEvent.ACTION_UP) {
                                 if (cursorContainer.getNumCursors() > 2 && !isCreated) {
-                                    System.out.println("test");
                                     canCreate = true;
                                     positionTouch = cursorContainer.getCursorsPosition();
                                 }

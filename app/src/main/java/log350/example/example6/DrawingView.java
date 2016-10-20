@@ -3,10 +3,12 @@ package log350.example.example6;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 //import java.util.List;
 
 import android.content.Context;
 //import android.graphics.Matrix;
+import android.database.Cursor;
 import android.graphics.Canvas;
 //import android.graphics.Rect;
 //import android.graphics.Path;
@@ -137,7 +139,7 @@ class CursorContainer {
     // or null if no such cursor exists.
     // Can be used for retrieving both cursors of type TYPE_DRAGGING, for example,
     // by calling getCursorByType( MyCursor.TYPE_DRAGGING, 0 )
-    // and getCursorByType( MyCursor.TYPE_DRAGGING, 1 ),
+    // and getCursorByType( cursorContainer.getCursorByType();.TYPE_DRAGGING, 1 ),
     // when there may be cursors of other type present at the same time.
     public MyCursor getCursorByType(int type, int i) {
         for (int ii = 0; ii < cursors.size(); ++ii) {
@@ -173,6 +175,14 @@ class CursorContainer {
     public void removeCursorByIndex(int index) {
         cursors.remove(index);
     }
+
+    public ArrayList<Point2D> getCursorsPosition() {
+        ArrayList<Point2D> positions = new ArrayList<Point2D>();
+        for (MyCursor c: cursors) {
+            positions.add(c.getCurrentPosition());
+        }
+        return positions;
+    }
 }
 
 
@@ -205,7 +215,7 @@ public class DrawingView extends View {
     MyButton lassoButton = new MyButton("Lasso", 10, 70, 140, 140);
     MyButton deleteButton = new MyButton("Supprimer", 10, 220, 140, 140);
     MyButton fitButton = new MyButton("Encadrer", 10, 370, 140, 140);
-    MyButton createButton = new MyButton("Créer", 10, 520, 170, 170);
+    MyButton createButton = new MyButton("Créer", 10, 520, 140, 140);
 
     OnTouchListener touchListener;
 
@@ -299,19 +309,21 @@ public class DrawingView extends View {
         }
 
         if (currentMode == MODE_CREATE) {
-            if (canCreate && positionTouch.size() > 0) {
-                ArrayList<Point2D> sommets = new ArrayList<Point2D>();
-                sommets = Point2DUtil.computeConvexHull(positionTouch);
+            if (canCreate) {
+                ArrayList<Point2D> pos = new ArrayList<Point2D>();
+                for (Point2D p: positionTouch) {
+                    pos.add(gw.convertPixelsToWorldSpaceUnits(p));
+                }
+                System.out.println(pos.size());
+                ArrayList<Point2D> sommets = Point2DUtil.computeConvexHull(pos);
                 shapeContainer.addShape(sommets);
                 isCreated = true;
                 canCreate = false;
                 positionTouch.clear();
             }
 
-            if (positionTouch.size() > 2) {
-                ArrayList<Point2D> points = new ArrayList<Point2D>();
-                points = Point2DUtil.computeConvexHull(positionTouch);
-                Shape s = new Shape(points);
+            if (cursorContainer.getNumCursors() > 2 && !isCreated) {
+                Shape s = new Shape(Point2DUtil.computeConvexHull(cursorContainer.getCursorsPosition()));
                 s.draw(gw, true);
             }
         }
@@ -402,10 +414,10 @@ public class DrawingView extends View {
                                     cursor.setType(MyCursor.TYPE_BUTTON);
                                 } else if(deleteButton.contains(p_pixels)) {
                                     currentMode = MODE_DELETE;
-                                } else if(fitButton.contains(p_pixels)){
+                                } else if(fitButton.contains(p_pixels)) {
                                     currentMode = MODE_FIT;
                                 } else if(createButton.contains(p_pixels)){
-                                    currentMode = MODE_CREATE;
+                                        currentMode = MODE_CREATE;
                                 } else if (indexOfShapeBeingManipulated >= 0) {
                                     currentMode = MODE_SHAPE_MANIPULATION;
                                     cursor.setType(MyCursor.TYPE_DRAGGING);
@@ -492,6 +504,7 @@ public class DrawingView extends View {
                                 indexOfShapeBeingManipulated = shapeContainer.indexOfShapeContainingGivenPoint(p_world);
                                 if(indexOfShapeBeingManipulated >= 0) {
                                     Shape shape = shapeContainer.getShape(indexOfShapeBeingManipulated);
+                                    indexOfShapeBeingManipulated = -1;
                                     if(selectedShapes.contains(shape)) {
                                         selectedShapes.remove(shape);
                                     }
@@ -514,50 +527,21 @@ public class DrawingView extends View {
                             break;
                         case MODE_CREATE:
                             if (type == MotionEvent.ACTION_DOWN) {
-                                if (!createButton.contains(cursorContainer.getCursorByIndex(event.getActionIndex()).getCurrentPosition())) {
-                                    positionTouch.add(cursorContainer.getCursorByIndex(event.getActionIndex()).getCurrentPosition());
-                                    System.out.println(positionTouch.size());
+                                Point2D p_pixels = new Point2D(x, y);
+                                if(createButton.contains(p_pixels)){
+                                    currentMode = MODE_NEUTRAL;
                                 }
                             }
                             else if (type == MotionEvent.ACTION_UP) {
-                                if (positionTouch.size() <= 2) {
-                                    if (!isCreated) {
-                                        if (!createButton.contains(cursorContainer.getCursorByIndex(event.getActionIndex()).getCurrentPosition())) {
-                                            System.out.println("touch:" + event.getActionIndex());
-                                            if (positionTouch.size() <= cursorContainer.getNumCursors() - 1)
-                                                positionTouch.remove(event.getActionIndex() - 1);
-                                            else
-                                                positionTouch.remove(event.getActionIndex());
-                                        }
-                                    }
-                                }
-                                else {
+                                if (cursorContainer.getNumCursors() > 2 && !isCreated) {
+                                    System.out.println("test");
                                     canCreate = true;
-                                    System.out.println("oui");
+                                    positionTouch = cursorContainer.getCursorsPosition();
                                 }
 
                                 cursorContainer.removeCursorByIndex(cursorIndex);
                                 if (cursorContainer.getNumCursors() == 0) {
-                                    currentMode = MODE_NEUTRAL;
                                     isCreated = false;
-                                    positionTouch.clear();
-                                }
-                            }
-                            else if (type == MotionEvent.ACTION_MOVE) {
-                                for (int i = 0; i < event.getPointerCount(); ++i) {
-                                    int tmp_id = event.getPointerId(i);
-                                    cursorContainer.updateCursorById(tmp_id, event.getX(i), event.getY(i));
-                                }
-
-                                if (positionTouch.size() > 0) {
-                                    for (int i = 0; i < cursorContainer.getNumCursors(); i++) {
-                                        if (!createButton.contains(cursorContainer.getCursorByIndex(i).getCurrentPosition())) {
-                                            if (positionTouch.size() <= cursorContainer.getNumCursors() - 1)
-                                                positionTouch.get(i - 1).copy(cursorContainer.getCursorByIndex(i).getCurrentPosition());
-                                            else
-                                                positionTouch.get(i).copy(cursorContainer.getCursorByIndex(i).getCurrentPosition());
-                                        }
-                                    }
                                 }
                             }
                             break;
